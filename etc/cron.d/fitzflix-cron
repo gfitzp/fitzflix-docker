@@ -1,0 +1,3 @@
+* * * * * root /usr/bin/find /Imports -maxdepth 1 -type f -not -name "*@eaDir*" -not -name "@Syno*" -not -name "*.DS_Store" -not -name "*.txt" -amin +1 -cmin +1 | /usr/local/bin/parallel --no-notice -j0 /Import.sh {} > /dev/console
+* * * * * root /bin/bash /Queue.sh > /dev/console
+0 8 * * * root /usr/bin/find /dropletSpecs.txt -mmin +1440 -exec echo "Subject: Fitzflix Alert! Droplets older than 24 hours!" /; | cat /recipient.txt - <(echo "Check if files are still processing.") | sendmail -t
