@@ -1,6 +1,6 @@
 # Fitzflix
 
-A file manager to maintain two video libraries, one of original-quality files and another of transcoded versions for [Plex](https://www.plex.tv/).
+A Docker-based version of the [Fitzflix video library manager](https://github.com/gfitzp/fitzflix). Maintains two video libraries, one of original-quality files and another of transcoded versions for [Plex](https://www.plex.tv/).
 
 ## Background
 
@@ -26,9 +26,23 @@ By maintaining a database of the videos in our library, we can keep track of wha
 
 ## Setup
 
+### Volumes
+
+Assign folders for these mount paths:
+
+  - `/Imports`
+  - `/Originals`
+  - `/Plex`
+  - `/root/.ssh/` (optional; will use SSH keys in this directory)
+
 ### Environment Variables
 
 Define the environment variables:
+
+  - `TZ` Timezone
+  - `PUID` UID - log in to container and run `id` to find
+  - `PGID` GID - log in to container and run `id` to find
+  
 
   - `DEFAULT_HANDBRAKE_PRESET` HandBrake preset to use if no handbrake_preset is specified (optional; default: Apple 1080p60 Surround)
 
@@ -96,7 +110,7 @@ TV Show naming format: **TV Show Title - SseasonEepisode - Optional Release Info
   
 Quality preference order can be modified in the `ref_source_quality` table; if a title with a higher quality preference is added, lower-quality files that have already been archived will be marked for deletion.
 
-Run **Import.sh** on each file in `/Imports`; see `/etc/cron.d/fitzflix-cron` for an example on automating. It will perform different operations on the file based on the target file extension:
+The **Import.sh** script will run once every minute; modify its frequency in `/etc/cron.d/fitzflix-cron`. It will perform different operations on the file based on its file extension:
 
   - mkv
 	  - If the first audio track is `${NATIVE_LANGUAGE}`, keep only `${NATIVE_LANGUAGE}` audio and remove all others
@@ -124,19 +138,19 @@ Files will be saved in `/Originals/Movies` or `/Originals/TV Shows`:
   
 ### Archive
 
-Run **Queue.sh**. Files with the "archive" task will be uploaded to a DigitalOcean droplet, encrypted with the `${S3_GPG_PASSPHRASE}`, and uploaded to `${S3_BUCKET}`.
+Files with the "archive" task will be uploaded to a DigitalOcean droplet, encrypted with the `${S3_GPG_PASSPHRASE}`, and uploaded to `${S3_BUCKET}`.
 
 ### Delete
 
-Run **Queue.sh**. Original files with the "delete" task will be deleted from the local filesystem. Files will only be deleted if they were previously archived to S3.
+Original files with the "delete" task will be deleted from the local filesystem. Files will only be deleted if they were previously archived to S3.
 
 ### Restore
 
-Run **Queue.sh**. If a file needs to be re-transcoded, but has already been deleted from the local filesystem, it will be marked "restore"; the file's archived version will be requested to be restored from AWS Glacier storage, and marked with a future time for when it should be available for download. Retrievals are set to use the "Bulk" retrieval timeframe: [https://aws.amazon.com/glacier/faqs/](https://aws.amazon.com/glacier/faqs/)
+If a file needs to be re-transcoded, but has already been deleted from the local filesystem, it will be marked "restore"; the file's archived version will be requested to be restored from AWS Glacier storage, and marked with a future time for when it should be available for download. Retrievals are set to use the "Bulk" retrieval timeframe: [https://aws.amazon.com/glacier/faqs/](https://aws.amazon.com/glacier/faqs/)
 
 ### Encode
 
-Run **Queue.sh**. Files with the "encode" task will be transcoded. If the file has been previously deleted from the local filesystem, and already requested to be restored from AWS Glacier storage, it will first be downloaded from AWS Glacier storage. Otherwise it will be uploaded from the local filesystem.
+Files with the "encode" task will be transcoded. If the file has been previously deleted from the local filesystem, and already requested to be restored from AWS Glacier storage, it will first be downloaded from AWS Glacier storage. Otherwise it will be uploaded from the local filesystem.
 
 Encoding settings are applied in the following table sequence: `presets_generic` -> `presets_series` -> `presets_titles` -> `files`. Encoding settings can then be overridden at a granular level; multiple series might use the same generic settings, can be tweaked on a series level, and overridden per episode or based on an individual file.
 
@@ -172,11 +186,11 @@ Better quality source versions will overwrite existing versions.
 
 ### Purge
 
-Run **Queue.sh**. Files marked with the "purge" task will have their local files AND their AWS Glacier files deleted, and their records removed from the database. This option is only available for those files that have the `purge_queue` flag set, and `date_earliest_purge` is in the past.
+Files marked with the "purge" task will have their local files AND their AWS Glacier files deleted, and their records removed from the database. This option is only available for those files that have the `purge_queue` flag set, and `date_earliest_purge` is in the past.
 
 ### Queue
 
-Run **Queue.sh**. Three queue files are created: **queue_archive.tsv**, **queue_encode.tsv**, and **queue_other.tsv**. Archive and Encode tasks are processed remotely, while Other contains tasks that do not require much processing power.
+Three queue files are created: **queue_archive.tsv**, **queue_encode.tsv**, and **queue_other.tsv**. Archive and Encode tasks are processed remotely, while Other contains tasks that do not require much processing power.
 
 Based on the number of tasks in queue_archive.tsv and queue_encode.tsv, up to `${DO_MAX_DROPLETS}` droplets will be created for remote processing. The droplet type is chosen to process as many tasks as possible in the shortest amount of time, but if multiple droplets are estimated to take the same length of time, then the least expensive of those options is selected. The droplet details are added to a **dropletSpecs.txt** file, and an email is sent with information about the droplets created.
 
