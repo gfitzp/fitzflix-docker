@@ -139,18 +139,6 @@ then
 	exit
 fi
 
-# Double-check that we didn't leave any droplets running earlier
-# otherwise we get an error when we try to create a droplet with an existing droplet name
-
-# Destroy all droplets with the "fitzflix-transcoder" tag
-python3 /fitzflix.py delete --apikey=${DO_API_KEY} &&
-
-# Delete our list of remote nodes
-rm /sshloginfile.txt
-
-# Re-enable StrictHostKeyChecking
-mv /root/.ssh/config.backup /root/.ssh/config
-
 
 # =====
 # Start the queue process
@@ -160,8 +148,6 @@ configure_s3cmd &&
 
 # Configure Postfix if it hasn't yet been configured
 configure_postfix &&
-
-submit_ssh_key &&
 
 # Determine how many remote-capable tasks we have in queue
 numRemoteTasks=$(create_queues | tail -n1) &&
@@ -199,7 +185,22 @@ mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT:=3306} -u ${MYSQL_USER} -p${MYSQL_PASSWOR
 
 # Create droplets if we have at least one remote task in queue
 if [[ ${numRemoteTasks} -gt 0 ]]
-then	
+then
+
+	# Double-check that we didn't leave any droplets running earlier
+	# otherwise we get an error when we try to create a droplet with an existing droplet name
+
+	# Destroy all droplets with the "fitzflix-transcoder" tag
+	python3 /fitzflix.py delete --apikey=${DO_API_KEY} &&
+
+	# Delete our list of remote nodes
+	rm /sshloginfile.txt
+
+	# Re-enable StrictHostKeyChecking
+	mv /root/.ssh/config.backup /root/.ssh/config
+
+	# Submit SSH key fingerprint to DigitalOcean
+	submit_ssh_key &&
 	
 	# Get our SSH key fingerprint so we can add our SSH key to our transcoding droplets for passwordless login
 	current_fingerprint=$(ssh-keygen -E md5 -lf /root/.ssh/id_rsa.pub | cut -f2 -d \ | cut -c 5-) &&
