@@ -836,7 +836,7 @@ def volume_orphans(token):
 if __name__ == "__main__":
 
 	# Get command line arguments
-	arguments = docopt(__doc__, version="Fitzflix 1.0")
+	arguments = docopt(__doc__, version="Fitzflix 1.0.1")
 	
 	p.pprint(arguments)
 	
