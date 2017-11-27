@@ -237,7 +237,7 @@ do
 	if [[ $(wc -l < /queue_archive.tsv) -gt 0 ]]
 	then
 		echo "Archiving files..." &&
-		/usr/local/bin/parallel --no-notice -a /queue_archive.tsv --colsep '\t' --use-cpus-instead-of-cores --jobs ${simultaneousEncodes} --env DEFAULT_HANDBRAKE_PRESET --env MYSQL_DB --env MYSQL_HOST --env MYSQL_PASSWORD --env MYSQL_PORT --env MYSQL_USER --env NATIVE_LANGUAGE --env S3_ACCESS_KEY --env S3_BUCKET --env S3_GPG_PASSPHRASE --env S3_SECRET_KEY --sshloginfile /sshloginfile.txt --workdir /mnt/storage --basefile /./tasks.sh --basefile /./dropletSpecs.txt --transferfile /./Originals{1} --cleanup /mnt/storage/tasks.sh &&
+		/usr/local/bin/parallel --no-notice -a /queue_archive.tsv --colsep '\t' --use-cpus-instead-of-cores --jobs ${simultaneousEncodes} --env DEFAULT_HANDBRAKE_PRESET --env MYSQL_DB --env MYSQL_HOST --env MYSQL_PASSWORD --env MYSQL_PORT --env MYSQL_USER --env NATIVE_LANGUAGE --env S3_ACCESS_KEY --env S3_BUCKET --env S3_GPG_PASSPHRASE --env S3_SECRET_KEY --sshloginfile /sshloginfile.txt --workdir /mnt/storage --basefile /mnt/storage/tasks.sh --basefile /mnt/storage/dropletSpecs.txt --transferfile /mnt/storage/Originals{1} --cleanup /mnt/storage/tasks.sh &&
 		cat /recipient.txt <(echo "${queueSubject}") <(awk -F '\t' '{printf ("%s\t%s\n", $2, $1) }' /queue_archive.tsv) | /usr/sbin/sendmail -t
 	fi &&
 	
@@ -246,7 +246,7 @@ do
 	if [[ $(wc -l < /queue_encode.tsv) -gt 0 ]]
 	then
 		echo "Encoding files..." &&
-		/usr/local/bin/parallel --no-notice -a /queue_encode.tsv --colsep '\t' --use-cpus-instead-of-cores --jobs ${simultaneousEncodes} --env DEFAULT_HANDBRAKE_PRESET --env MYSQL_DB --env MYSQL_HOST --env MYSQL_PASSWORD --env MYSQL_PORT --env MYSQL_USER --env NATIVE_LANGUAGE --env S3_ACCESS_KEY --env S3_BUCKET --env S3_GPG_PASSPHRASE --env S3_SECRET_KEY --sshloginfile /sshloginfile.txt --workdir /mnt/storage --basefile /./tasks.sh --basefile /./dropletSpecs.txt --transferfile /./Originals{1} --return /Plex"{3}/{4}.m4v" --cleanup /mnt/storage/tasks.sh &&
+		/usr/local/bin/parallel --no-notice -a /queue_encode.tsv --colsep '\t' --use-cpus-instead-of-cores --jobs ${simultaneousEncodes} --env DEFAULT_HANDBRAKE_PRESET --env MYSQL_DB --env MYSQL_HOST --env MYSQL_PASSWORD --env MYSQL_PORT --env MYSQL_USER --env NATIVE_LANGUAGE --env S3_ACCESS_KEY --env S3_BUCKET --env S3_GPG_PASSPHRASE --env S3_SECRET_KEY --sshloginfile /sshloginfile.txt --workdir /mnt/storage --basefile /mnt/storage/tasks.sh --basefile /mnt/storage/dropletSpecs.txt --transferfile /mnt/storage/Originals{1} --return /mnt/storage/Plex"{3}/{4}.m4v" --cleanup /mnt/storage/tasks.sh &&
 		cat /recipient.txt <(echo "${queueSubject}") <(awk -F '\t' '{printf ("%s\t%s\n", $2, $1) }' /queue_encode.tsv) | /usr/sbin/sendmail -t
 	fi &&
 	
