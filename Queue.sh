@@ -100,7 +100,7 @@ create_queues () {
 }
 
 
-ssh_key_check () {
+submit_ssh_key () {
 
 	# Create the ssh key if one doesn't already exist
 	if [ ! -f /root/.ssh/id_rsa ]
@@ -119,7 +119,7 @@ ssh_key_check () {
 	fi
 
 	# Get the existing key's fingerprint and key value
-	current_fingerprint=$(ssh-keygen -E md5 -lf /root/.ssh/id_rsa.pub | cut -f2 -d \ ) &&
+	current_fingerprint=$(ssh-keygen -E md5 -lf /root/.ssh/id_rsa.pub | cut -f2 -d \ | cut -c 5-) &&
 	current_key=$(cat /root/.ssh/id_rsa.pub) &&
 
 	# Check DigitalOcean for our current key fingerprint and get its key_id, or submit our key if it's not already there
@@ -161,6 +161,8 @@ configure_s3cmd &&
 # Configure Postfix if it hasn't yet been configured
 configure_postfix &&
 
+submit_ssh_key &&
+
 # Determine how many remote-capable tasks we have in queue
 numRemoteTasks=$(create_queues | tail -n1) &&
 
@@ -199,8 +201,8 @@ mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT:=3306} -u ${MYSQL_USER} -p${MYSQL_PASSWOR
 if [[ ${numRemoteTasks} -gt 0 ]]
 then	
 	
-	# Get our SSH key_id from DO so we can add our SSH key to our transcoding droplets for passwordless login
-	sshKeyID=$(ssh_key_check | tail -n1) &&
+	# Get our SSH key fingerprint so we can add our SSH key to our transcoding droplets for passwordless login
+	current_fingerprint=$(ssh-keygen -E md5 -lf /root/.ssh/id_rsa.pub | cut -f2 -d \ | cut -c 5-) &&
 	
 	# Prevent asking for each host's SSH key by temporarily disabling StrictHostKeyChecking
 	# (We'll re-enable it when we destroy the droplets we just created)
@@ -223,7 +225,7 @@ then
 	# but this script is meant to run on a headless NAS with as little manual intervention as possible!
 	# See also: https://www.gnu.org/licenses/gpl-faq.html#RequireCitation
 	
-	parallel --no-notice -j0 'python3 /fitzflix.py create --apikey={1} --id={2} --size={3} --sshid={4} --simultaneous={5} --region={6} | tail -n1 | ( read dropletIP ; parallelStatus="1" ; while [ ${parallelStatus} -eq 1 ] ; do ssh -q ${dropletIP} [[ ! -f /usr/local/bin/parallel ]] && sleep 5 || parallelStatus="0" ; done && echo ${dropletIP} | tee -a /sshloginfile.txt ; )' ::: ${DO_API_KEY} ::: $(seq 1 ${numDroplets}) ::: ${dropletType} ::: ${sshKeyID} ::: ${simultaneousEncodes} ::: ${DO_REGION:="nyc3"}
+	parallel --no-notice -j0 'python3 /fitzflix.py create --apikey={1} --id={2} --size={3} --fingerprint={4} --simultaneous={5} --region={6} | tail -n1 | ( read dropletIP ; parallelStatus="1" ; while [ ${parallelStatus} -eq 1 ] ; do ssh -q ${dropletIP} [[ ! -f /usr/local/bin/parallel ]] && sleep 5 || parallelStatus="0" ; done && echo ${dropletIP} | tee -a /sshloginfile.txt ; )' ::: ${DO_API_KEY} ::: $(seq 1 ${numDroplets}) ::: ${dropletType} ::: ${current_fingerprint} ::: ${simultaneousEncodes} ::: ${DO_REGION:="nyc3"}
 
 fi &&
 

@@ -2,7 +2,7 @@
 
 Usage:
   fitzflix.py choose --apikey=TOKEN [--remotetasks=NUM] [--maxdroplets=NUM] [--region=REGION] [--cpu=NUM] [--ram=NUM]
-  fitzflix.py create --apikey=TOKEN --id=ID --size=SIZE (--sshid=ID... | --fingerprint=ID...) [--simultaneous=NUM] [--region=REGION]
+  fitzflix.py create --apikey=TOKEN --id=ID --size=SIZE --fingerprint=ID... [--simultaneous=NUM] [--region=REGION]
   fitzflix.py delete --apikey=TOKEN [--orphans-only]
   fitzflix.py keycheck --apikey=TOKEN --fingerprint=ID --sshkey=KEY
 
@@ -17,7 +17,6 @@ Options:
   --region=REGION     Region where this droplet should be created. [default: nyc3]
   --simultaneous=NUM  Number of tasks to perform in parallel. [default: 1]
   --size=SIZE         DigitalOcean droplet slug identifier.
-  --sshid=ID          DigitalOcean SSH key identification number.
   --sshkey=KEY        SSH public key string.
   --remotetasks=NUM   Total number of remote tasks to perform. [default: 0]
 
@@ -215,7 +214,7 @@ def droplet_choose(token, numTasks=0, maxDroplets=5, region="nyc3", minCPU=1, mi
 	return
 
 
-def droplet_create(token, identifier, dropletType, volumeID, sshKeys, region="nyc3"):
+def droplet_create(token, identifier, dropletType, volumeID, sshFingerprints, region="nyc3"):
 
 	storageIdentifier = "{}-{}".format(STORAGENAME, identifier.zfill(2))
 	dropletIdentifier = "{}-{}".format(DROPLETNAME, identifier.zfill(2))
@@ -239,7 +238,7 @@ def droplet_create(token, identifier, dropletType, volumeID, sshKeys, region="ny
 			"size": dropletType,
 			"image": "ubuntu-16-04-x64",
 			"volumes": [volumeID],
-			"ssh_keys": sshKeys,
+			"ssh_keys": sshFingerprints,
 			"user_data": """#!/bin/bash
 
 				sudo mkfs.ext4 -F /dev/disk/by-id/scsi-0DO_Volume_{0} &&
@@ -530,11 +529,13 @@ def ssh_key_check(token, current_fingerprint, current_key):
 	
 	for key in response.json()['ssh_keys']:
 	
-		# If the key is already at Digitalocean, print the key ID and exit
-		if key['fingerprint'] == current_fingerprint:
+		for fingerprint in current_fingerprint:
+	
+			# If the key is already at Digitalocean, print the key ID and exit
+			if key['fingerprint'] == fingerprint:
 		
-			print(key['id'])
-			sys.exit()
+				print(key['id'])
+				sys.exit()
 	
 	# If we reach this point, we haven't exited, which means the SSH key has not yet
 	# been submitted to DigitalOcean
@@ -856,11 +857,8 @@ if __name__ == "__main__":
 	elif arguments['create']:
 
 		volumeID = volume_create(arguments['--apikey'], arguments['--id'], int(arguments['--simultaneous']), arguments['--region'])
-		
-		sshkeys = []
-		sshkeys = arguments['--sshid'] + arguments['--fingerprint']
 	
-		dropletIP = droplet_create(arguments['--apikey'], arguments['--id'], arguments['--size'], volumeID, sshkeys, arguments['--region'])
+		dropletIP = droplet_create(arguments['--apikey'], arguments['--id'], arguments['--size'], volumeID, arguments['--fingerprint'], arguments['--region'])
 	
 		print("root@{}".format(dropletIP))
 	
@@ -882,4 +880,4 @@ if __name__ == "__main__":
 			
 	elif arguments['keycheck']:
 	
-		ssh_key_check(arguments['--apikey'], arguments['--fingerprint'][4:], arguments['--sshkey'])
+		ssh_key_check(arguments['--apikey'], arguments['--fingerprint'], arguments['--sshkey'])
