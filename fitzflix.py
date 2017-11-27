@@ -287,7 +287,7 @@ def droplet_create(token, identifier, dropletType, volumeID, sshKeys, region="ny
 			# The volume was created, but our attempt to create a droplet failed,
 			# so before we exit we attempt to destroy the volume if we can
 			
-			volume_orphans()
+			volume_orphans(token)
 					
 			sys.exit(1)
 		
@@ -621,7 +621,7 @@ def volume_create(token, identifier, simultaneousEncodes=1, region="nyc3"):
 		# The volume may have been created, but our attempt to check the status failed
 		# so before we exit we attempt to destroy the volume if we can
 		
-		volume_orphans()
+		volume_orphans(token)
 		
 		sys.exit(1)
 	
