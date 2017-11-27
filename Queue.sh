@@ -66,7 +66,7 @@ configure_postfix() {
 	
 		# Restart Postfix
 		/usr/sbin/service rsyslog restart &&
-		/usr/sbin/service postfix restart
+		/usr/sbin/service postfix reload
 		
 	fi
 	
