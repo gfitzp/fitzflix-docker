@@ -176,7 +176,7 @@ encode_video () {
 
 	# Convert the video
 	taskStart=$(date +%s) &&
-	HandBrakeCLI --stop-at duration:30 --preset """${handbrake_preset}""" --encoder ${mpeg_encoder} ${encoder_tune} ${crop} --quality ${quality} --encopts vbv-maxrate=${vbv_maxrate}:vbv-bufsize=${vbv_bufsize}:crf-max=${crf_max}:qpmax=${qpmax} --detelecine --decomb=mode=${decomb} ${denoise} ${audio_language} -i /mnt/storage/Originals"${file_path}" -o /mnt/storage/Plex"${dir_path}/${plex_name}".m4v >> /mnt/storage/"${plex_name}".log &&
+	HandBrakeCLI --preset """${handbrake_preset}""" --encoder ${mpeg_encoder} ${encoder_tune} ${crop} --quality ${quality} --encopts vbv-maxrate=${vbv_maxrate}:vbv-bufsize=${vbv_bufsize}:crf-max=${crf_max}:qpmax=${qpmax} --detelecine --decomb=mode=${decomb} ${denoise} ${audio_language} -i /mnt/storage/Originals"${file_path}" -o /mnt/storage/Plex"${dir_path}/${plex_name}".m4v >> /mnt/storage/"${plex_name}".log &&
 	taskEnd=$(date +%s) &&
 	
 	task_duration=$(( taskEnd - taskStart )) &&
