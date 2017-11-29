@@ -703,7 +703,7 @@ SELECT
 	END AS "vbv_bufsize",
 	COALESCE(file.crf_max, q.crf_max) AS "crf_max",
 	COALESCE(file.qpmax, q.qpmax) AS "qpmax",
-	COALESCE(title.decomb, title_generic.decomb, series.decomb, series_generic.decomb, file.decomb, '39') AS "decomb",
+	COALESCE(title.decomb, title_generic.decomb, series.decomb, series_generic.decomb, file.decomb, '63') AS "decomb",
 	COALESCE(title.nlmeans, title_generic.nlmeans, series.nlmeans, series_generic.nlmeans, file.nlmeans) AS "nlmeans",
 	CASE
 		WHEN title.nlmeans IS NOT NULL THEN title.nlmeans_tune
