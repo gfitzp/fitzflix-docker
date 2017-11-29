@@ -170,7 +170,7 @@ Encodings will use these settings as default:
   - film encoder tuning
   - crop settings according to `DEFAULT_HANDBRAKE_PRESET`'s default; default is to remove black bars
   - `quality`, `vbv_maxrate`, `vbv_bufsize`, `crf_max`, and `qpmax` are based on [Don Melton's video scripts](https://github.com/donmelton/video_transcoding#rationale), with two major changes: `vbv_maxrate` is based on the input file's bitrate with a max of 9800kbps [(max DVD bitrate)](https://en.wikipedia.org/wiki/DVD-Video#Data_rate) for SD, 20000kbps [(half of Blu-ray)](https://en.wikipedia.org/wiki/Blu-ray#Bit_rate) for HD, and 40000kbps for 4K, and `crf_max` is 18. (e.g. input file with 3000kbps bitrate: `quality=1, vbv_maxrate=3000, vbv_bufsize=6000, crf_max=18, qpmax=34`)
-  - default decomb preset of selective + cubic + blend + yadif = [39](https://github.com/HandBrake/HandBrake/blob/master/libhb/decomb.h)
+  - decomb setting of EEDI2 Bob (selective + deinterlace + EEDI2 + cubic + blend + yadif) = [63](https://github.com/HandBrake/HandBrake/blob/master/libhb/decomb.h)
   
 Files will be encoded on the remote nodes, and returned to `/Plex/Movies` or `/Plex/TV Shows`. The Plex name is the same as the original file name, but without the `quality_title` information:
 

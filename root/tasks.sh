@@ -141,12 +141,12 @@ encode_video () {
 	fi &&
 
 
-	# Use the default decomb preset of selective + cubic + blend + yadif if none has been specified
+	# Use the decomb setting of EEDI2 Bob (selective + deinterlace + EEDI2 + cubic + blend + yadif) if none has been specified
 	# See https://github.com/HandBrake/HandBrake/blob/master/libhb/decomb.h for decomb methods
 
 	if [[ ${decomb} == "NULL" ]]
 	then
-		decomb="39"
+		decomb="63"
 	fi &&
 
 
