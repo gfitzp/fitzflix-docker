@@ -537,6 +537,7 @@ CREATE TABLE history_task (
 	plex_name				VARCHAR(256),
 	series_title			VARCHAR(256),
 	release_identifier		VARCHAR(256),
+	file_duration			INT,
 	quality_title			VARCHAR(32),
 	handbrake_preset		VARCHAR(128),
 	mpeg_encoder			VARCHAR(32),
