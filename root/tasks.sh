@@ -182,7 +182,7 @@ encode_video () {
 	task_duration=$(( taskEnd - taskStart )) &&
 	
 	# Update the database to show that the file has been transcoded as of now
-	mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT:=3306} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO history_task (queue_start, file_path, task, dir_path, plex_name, series_title, release_identifier, quality_title, handbrake_preset, mpeg_encoder, encoder_tune, crop, quality, vbv_maxrate, vbv_bufsize, crf_max, qpmax, decomb, nlmeans, nlmeans_tune, audio_language, task_duration) SELECT FROM_UNIXTIME('${queueStart}'), file_path, task, dir_path, plex_name, series_title, release_identifier, quality_title, handbrake_preset, mpeg_encoder, encoder_tune, crop, quality, vbv_maxrate, vbv_bufsize, crf_max, qpmax, decomb, nlmeans, nlmeans_tune, audio_language, '${task_duration}' FROM v_queue WHERE file_path = '${escaped_file_path}';" &&
+	mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT:=3306} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO history_task (queue_start, file_path, task, dir_path, plex_name, series_title, release_identifier, file_duration, quality_title, handbrake_preset, mpeg_encoder, encoder_tune, crop, quality, vbv_maxrate, vbv_bufsize, crf_max, qpmax, decomb, nlmeans, nlmeans_tune, audio_language, task_duration) SELECT FROM_UNIXTIME('${queueStart}'), file_path, task, dir_path, plex_name, series_title, release_identifier, file_duration, quality_title, handbrake_preset, mpeg_encoder, encoder_tune, crop, quality, vbv_maxrate, vbv_bufsize, crf_max, qpmax, decomb, nlmeans, nlmeans_tune, audio_language, '${task_duration}' FROM v_queue WHERE file_path = '${escaped_file_path}';" &&
 	
 	if [[ "${task}" == "encode" ]]
 	then
