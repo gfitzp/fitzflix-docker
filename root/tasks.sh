@@ -31,8 +31,8 @@ archive_video () {
 	task_duration=$(( taskEnd - taskStart )) &&
 	
 	# Update the database to indicate that the file has been archived
-	mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT:=3306} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO history_task (queue_start, file_path, task, task_duration) SELECT FROM_UNIXTIME('${queueStart}'), file_path, task, '${task_duration}' FROM v_queue WHERE file_path = '${escaped_file_path}';" &&
-	mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT:=3306} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "UPDATE files SET date_file_archived = CURRENT_TIMESTAMP WHERE file_path = '${escaped_file_path}';"
+	mysql -h ${MYSQL_PORT_3306_TCP_ADDR:-${MYSQL_HOST}} -P ${MYSQL_PORT_3306_TCP_PORT:-${MYSQL_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO history_task (queue_start, file_path, task, task_duration) SELECT FROM_UNIXTIME('${queueStart}'), file_path, task, '${task_duration}' FROM v_queue WHERE file_path = '${escaped_file_path}';" &&
+	mysql -h ${MYSQL_PORT_3306_TCP_ADDR:-${MYSQL_HOST}} -P ${MYSQL_PORT_3306_TCP_PORT:-${MYSQL_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "UPDATE files SET date_file_archived = CURRENT_TIMESTAMP WHERE file_path = '${escaped_file_path}';"
 
 }
 
@@ -53,8 +53,8 @@ delete_video() {
 	task_duration=$(( taskEnd - taskStart )) &&
 	
 	# Update the database to indicate that the file has been deleted
-	mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT:=3306} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO history_task (queue_start, file_path, task, task_duration) SELECT FROM_UNIXTIME('${queueStart}'), file_path, task, '${task_duration}' FROM v_queue WHERE file_path = '${escaped_file_path}';" &&
-	mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT:=3306} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "UPDATE files SET date_file_deleted = CURRENT_TIMESTAMP WHERE file_path = '${escaped_file_path}';"
+	mysql -h ${MYSQL_PORT_3306_TCP_ADDR:-${MYSQL_HOST}} -P ${MYSQL_PORT_3306_TCP_PORT:-${MYSQL_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO history_task (queue_start, file_path, task, task_duration) SELECT FROM_UNIXTIME('${queueStart}'), file_path, task, '${task_duration}' FROM v_queue WHERE file_path = '${escaped_file_path}';" &&
+	mysql -h ${MYSQL_PORT_3306_TCP_ADDR:-${MYSQL_HOST}} -P ${MYSQL_PORT_3306_TCP_PORT:-${MYSQL_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "UPDATE files SET date_file_deleted = CURRENT_TIMESTAMP WHERE file_path = '${escaped_file_path}';"
 
 }
 
@@ -80,9 +80,23 @@ restore_video () {
 	
 	# Update the database to indicate that a restore has been requested
 	# A DB trigger will also update the database for when the restore should be available (bulk = 12 hours after restore request)
-	mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT:=3306} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO history_task (queue_start, file_path, task, task_duration) SELECT FROM_UNIXTIME('${queueStart}'), file_path, task, '${task_duration}' FROM v_queue WHERE file_path = '${escaped_file_path}';" &&
-	mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT:=3306} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "UPDATE files SET date_restore_requested = CURRENT_TIMESTAMP WHERE file_path = '${escaped_file_path}';"
+	mysql -h ${MYSQL_PORT_3306_TCP_ADDR:-${MYSQL_HOST}} -P ${MYSQL_PORT_3306_TCP_PORT:-${MYSQL_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO history_task (queue_start, file_path, task, task_duration) SELECT FROM_UNIXTIME('${queueStart}'), file_path, task, '${task_duration}' FROM v_queue WHERE file_path = '${escaped_file_path}';" &&
+	mysql -h ${MYSQL_PORT_3306_TCP_ADDR:-${MYSQL_HOST}} -P ${MYSQL_PORT_3306_TCP_PORT:-${MYSQL_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "UPDATE files SET date_restore_requested = CURRENT_TIMESTAMP WHERE file_path = '${escaped_file_path}';"
 
+}
+
+
+copy_video () {
+
+	rm /mnt/Storage/Plex"${dir_path}/${plex_name}.*"
+	
+	mkdir -p /mnt/storage/Plex"${dir_path}" &&
+	
+	cp /mnt/Storage/Originals"${file_path}" /mnt/Storage/Plex"${file_path}" &&
+	
+	# Update the database to show that the file has been copied as of now
+	mysql -h ${MYSQL_PORT_3306_TCP_ADDR:-${MYSQL_HOST}} -P ${MYSQL_PORT_3306_TCP_PORT:-${MYSQL_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO history_task (queue_start, file_path, task, dir_path, plex_name, series_title, release_identifier, file_duration, quality_title, task_duration) SELECT FROM_UNIXTIME('${queueStart}'), file_path, task, dir_path, plex_name, series_title, release_identifier, file_duration, quality_title, '${task_duration}' FROM v_queue WHERE file_path = '${escaped_file_path}';" &&
+	
 }
 
 
@@ -182,11 +196,11 @@ encode_video () {
 	task_duration=$(( taskEnd - taskStart )) &&
 	
 	# Update the database to show that the file has been transcoded as of now
-	mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT:=3306} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO history_task (queue_start, file_path, task, dir_path, plex_name, series_title, release_identifier, file_duration, quality_title, handbrake_preset, mpeg_encoder, encoder_tune, crop, quality, vbv_maxrate, vbv_bufsize, crf_max, qpmax, decomb, nlmeans, nlmeans_tune, audio_language, task_duration) SELECT FROM_UNIXTIME('${queueStart}'), file_path, task, dir_path, plex_name, series_title, release_identifier, file_duration, quality_title, handbrake_preset, mpeg_encoder, encoder_tune, crop, quality, vbv_maxrate, vbv_bufsize, crf_max, qpmax, decomb, nlmeans, nlmeans_tune, audio_language, '${task_duration}' FROM v_queue WHERE file_path = '${escaped_file_path}';" &&
+	mysql -h ${MYSQL_PORT_3306_TCP_ADDR:-${MYSQL_HOST}} -P ${MYSQL_PORT_3306_TCP_PORT:-${MYSQL_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO history_task (queue_start, file_path, task, dir_path, plex_name, series_title, release_identifier, file_duration, quality_title, handbrake_preset, mpeg_encoder, encoder_tune, crop, quality, vbv_maxrate, vbv_bufsize, crf_max, qpmax, decomb, nlmeans, nlmeans_tune, audio_language, task_duration) SELECT FROM_UNIXTIME('${queueStart}'), file_path, task, dir_path, plex_name, series_title, release_identifier, file_duration, quality_title, handbrake_preset, mpeg_encoder, encoder_tune, crop, quality, vbv_maxrate, vbv_bufsize, crf_max, qpmax, decomb, nlmeans, nlmeans_tune, audio_language, '${task_duration}' FROM v_queue WHERE file_path = '${escaped_file_path}';" &&
 	
 	if [[ "${task}" == "encode" ]]
 	then
-		mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT:=3306} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "UPDATE presets_titles SET latest_transcode = CURRENT_TIMESTAMP WHERE plex_name = '${escaped_plex_name}';"
+		mysql -h ${MYSQL_PORT_3306_TCP_ADDR:-${MYSQL_HOST}} -P ${MYSQL_PORT_3306_TCP_PORT:-${MYSQL_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "UPDATE presets_titles SET latest_transcode = CURRENT_TIMESTAMP WHERE plex_name = '${escaped_plex_name}';"
 	fi &&
 	
 	# Delete the log file
@@ -225,8 +239,8 @@ purge_video () {
 	task_duration=$(( taskEnd - taskStart )) &&
 	
 	# Remove the file from the database
-	mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT:=3306} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO history_task (queue_start, file_path, task, task_duration) SELECT FROM_UNIXTIME('${queueStart}'), file_path, task, '${task_duration}' FROM v_queue WHERE file_path = '${escaped_file_path}';" &&
-	mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT:=3306} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "DELETE FROM files WHERE file_path = '${escaped_file_path}'; DELETE FROM presets_titles WHERE plex_name = '${escaped_plex_name}'; DELETE FROM presets_titles WHERE series_title = '${escaped_series_title}';"
+	mysql -h ${MYSQL_PORT_3306_TCP_ADDR:-${MYSQL_HOST}} -P ${MYSQL_PORT_3306_TCP_PORT:-${MYSQL_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO history_task (queue_start, file_path, task, task_duration) SELECT FROM_UNIXTIME('${queueStart}'), file_path, task, '${task_duration}' FROM v_queue WHERE file_path = '${escaped_file_path}';" &&
+	mysql -h ${MYSQL_PORT_3306_TCP_ADDR:-${MYSQL_HOST}} -P ${MYSQL_PORT_3306_TCP_PORT:-${MYSQL_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "DELETE FROM files WHERE file_path = '${escaped_file_path}'; DELETE FROM presets_titles WHERE plex_name = '${escaped_plex_name}'; DELETE FROM presets_titles WHERE series_title = '${escaped_series_title}';"
 
 }
 

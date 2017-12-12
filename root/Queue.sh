@@ -80,15 +80,15 @@ create_queues () {
 	
 	# archive:	can be done on local and remote machines (preferably remote, due to the overhead needed to encrypt each file before uploading to S3)
 	#         	parallel command doesn't need a --return variable since there's nothing to be returned from the remote host
-	mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT:=3306} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "SELECT * FROM V_QUEUE WHERE task = 'archive';" -B --skip-column-names > /queue_archive.tsv &&
+	mysql -h ${MYSQL_PORT_3306_TCP_ADDR:-${MYSQL_HOST}} -P ${MYSQL_PORT_3306_TCP_PORT:-${MYSQL_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "SELECT * FROM V_QUEUE WHERE task = 'archive';" -B --skip-column-names > /queue_archive.tsv &&
 	
 	# encode:	can be done on local and remote machines (preferably remote, as the built-in CPU on my NAS isn't very powerful)
 	#			needs a --return variable to return the transcoded video to our library
-	mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT:=3306} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "SELECT * FROM V_QUEUE WHERE task = 'encode';" -B --skip-column-names > /queue_encode.tsv &&
+	mysql -h ${MYSQL_PORT_3306_TCP_ADDR:-${MYSQL_HOST}} -P ${MYSQL_PORT_3306_TCP_PORT:-${MYSQL_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "SELECT * FROM V_QUEUE WHERE task = 'encode';" -B --skip-column-names > /queue_encode.tsv &&
 	
 	# local:	items that can ONLY be done on a local machine, or simple tasks that don't need much CPU that can be done anywhere (so we prefer to process on the local machine - no need to spin up a droplet)
 	#			e.g. we can only delete files on the host by the host, we can request files to be restored from Glacier from any machine as it's just a webservice call, etc.
-	mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT:=3306} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "SELECT * FROM V_QUEUE WHERE task NOT IN ('archive', 'encode');" -B --skip-column-names > /queue_local.tsv &&
+	mysql -h ${MYSQL_PORT_3306_TCP_ADDR:-${MYSQL_HOST}} -P ${MYSQL_PORT_3306_TCP_PORT:-${MYSQL_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "SELECT * FROM V_QUEUE WHERE task NOT IN ('archive', 'encode');" -B --skip-column-names > /queue_local.tsv &&
 	
 	# Return the number of tasks we are able to perform on remote machines
 	# We'll use this number to determine how many droplets to create
@@ -180,7 +180,7 @@ escapedHourlyCost=$(printf %q "${hourlyCost}") &&
 escapedNumDroplets=$(printf %q "${numDroplets}") &&
 
 # Start the queue history
-mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT:=3306} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO history_queue (queue_start, droplet_type, num_cpus, simultaneous_tasks, hourly_cost, num_droplets) VALUES (FROM_UNIXTIME('${escapedQueueStart}'), '${escapedDropletType}', '${escapedNumCPUs}', '${escapedSimultaneousEncodes}', '${escapedHourlyCost}', '${escapedNumDroplets}');" &&
+mysql -h ${MYSQL_PORT_3306_TCP_ADDR:-${MYSQL_HOST}} -P ${MYSQL_PORT_3306_TCP_PORT:-${MYSQL_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO history_queue (queue_start, droplet_type, num_cpus, simultaneous_tasks, hourly_cost, num_droplets) VALUES (FROM_UNIXTIME('${escapedQueueStart}'), '${escapedDropletType}', '${escapedNumCPUs}', '${escapedSimultaneousEncodes}', '${escapedHourlyCost}', '${escapedNumDroplets}');" &&
 
 
 # Create droplets if we have at least one remote task in queue
@@ -287,7 +287,7 @@ cat /recipient.txt <(echo "${queueSubject}") <(echo "Estimated cost: \$`printf \
 rm /dropletSpecs.txt &&
 
 # Close out the queue history
-mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT:=3306} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "UPDATE history_queue SET queue_end = FROM_UNIXTIME('${queueEnd}') WHERE queue_start = FROM_UNIXTIME('${escapedQueueStart}');" &&
+mysql -h ${MYSQL_PORT_3306_TCP_ADDR:-${MYSQL_HOST}} -P ${MYSQL_PORT_3306_TCP_PORT:-${MYSQL_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "UPDATE history_queue SET queue_end = FROM_UNIXTIME('${queueEnd}') WHERE queue_start = FROM_UNIXTIME('${escapedQueueStart}');" &&
 
 # If there was a need to spin up a droplet, eliminate all traces of the remote nodes
 if [[ ${numRemoteTasks} -gt 0 ]]
