@@ -88,7 +88,7 @@ restore_video () {
 
 copy_video () {
 
-	rm /mnt/Storage/Plex/"${dir_path}/${plex_name}.*"
+	rm /mnt/Storage/Plex"${dir_path}/${plex_name}.*"
 	
 	mkdir -p /mnt/storage/Plex"${dir_path}" &&
 	
