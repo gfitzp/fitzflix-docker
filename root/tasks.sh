@@ -90,6 +90,8 @@ copy_video () {
 
 	rm /mnt/Storage/Plex/"${dir_path}/${plex_name}.*"
 	
+	mkdir -p /mnt/storage/Plex"${dir_path}" &&
+	
 	cp /mnt/Storage/Originals/"${file_path}" /mnt/Storage/Plex/"${file_path}" &&
 	
 	# Update the database to show that the file has been copied as of now
