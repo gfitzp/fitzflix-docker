@@ -97,7 +97,11 @@ RUN chmod 0644 /etc/cron.d/fitzflix-cron && \
  touch /var/log/cron.log
 
 # start cron service
-CMD env > /etc/environment && cron -f && service rsyslog start && service postfix start
+CMD env > /etc/environment && \
+ cron -f && \
+ service rsyslog stop && \
+ rm /var/run/rsyslogd.pid ; service rsyslog start && \
+ service postfix start
 
 # ports and volumes
 VOLUME /Imports /Originals /Plex /root
