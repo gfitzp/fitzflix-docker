@@ -119,7 +119,7 @@ INPUT="${PROCESSINGDIR}/${ORIGINALFILENAME}"
 
 # We performe different actions on a file based on the file extension:
 #   - MKV: remove non-native-language tracks, enable subtitle tracks if non-native audio, clear the file's title
-#   - M4V: run through atomicparsley to remove all metadata from the file
+#   - M4V: run through AtomicParsley to remove all metadata from the file
 #   - Others: no changes
 
 if [[ "${EXTENSION}" == "mkv" ]]; then
@@ -221,7 +221,7 @@ if [[ "${EXTENSION}" == "mkv" ]]; then
 elif [[ "${EXTENSION}" == "m4v" ]] || [[ "${EXTENSION}" == "mp4" ]]; then
 
 	echo "Removing MPEG-4 metadata..." &&
-	atomicparsley "${INPUT}" --metaEnema --overWrite &&
+	AtomicParsley "${INPUT}" --metaEnema --overWrite &&
 	mv "${INPUT}" "${OUTPUTDIR}/"
 	
 else
