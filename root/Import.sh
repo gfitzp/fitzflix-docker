@@ -363,8 +363,8 @@ then
 	mv "${OUTPUTDIR}/${ORIGINALFILENAME}" "/Originals${file_path}" &&
 	
 	# Add the file to the database
-	mysql -h ${MYSQL_HOST:-${MYSQL_PORT_3306_TCP_ADDR}} -P ${MYSQL_PORT:-${MYSQL_PORT_3306_TCP_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO presets_titles (plex_name, movie_title, release_year, release_identifier) VALUES ('${escaped_plex_name}', '${escaped_movie_title}', '${escaped_release_year}', ${escaped_release_identifier});"
-	mysql -h ${MYSQL_HOST:-${MYSQL_PORT_3306_TCP_ADDR}} -P ${MYSQL_PORT:-${MYSQL_PORT_3306_TCP_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO files (file_path, dir_path, base_name, plex_name, quality_title, crop, vbv_maxrate, file_duration) VALUES ('${escaped_file_path}', '${escaped_dir_path}', '${escaped_base_name}', '${escaped_plex_name}', '${escaped_quality_title}', ${crop}, ${vbv_maxrate}, ${file_duration});"
+	mysql -h ${MYSQL_PORT_3306_TCP_ADDR:-${MYSQL_HOST}} -P ${MYSQL_PORT_3306_TCP_PORT:-${MYSQL_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO presets_titles (plex_name, movie_title, release_year, release_identifier) VALUES ('${escaped_plex_name}', '${escaped_movie_title}', '${escaped_release_year}', ${escaped_release_identifier});"
+	mysql -h ${MYSQL_PORT_3306_TCP_ADDR:-${MYSQL_HOST}} -P ${MYSQL_PORT_3306_TCP_PORT:-${MYSQL_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO files (file_path, dir_path, base_name, plex_name, quality_title, crop, vbv_maxrate, file_duration) VALUES ('${escaped_file_path}', '${escaped_dir_path}', '${escaped_base_name}', '${escaped_plex_name}', '${escaped_quality_title}', ${crop}, ${vbv_maxrate}, ${file_duration});"
 	
 	cat /recipient.txt <(echo "Subject: Fitzflix Import") <(echo "${file_path}") | /usr/sbin/sendmail -t
 	
@@ -429,9 +429,9 @@ then
 	mv "${OUTPUTDIR}/${ORIGINALFILENAME}" "/Originals${file_path}" &&
 	
 	# Add the file to the database
-	mysql -h ${MYSQL_HOST:-${MYSQL_PORT_3306_TCP_ADDR}} -P ${MYSQL_PORT:-${MYSQL_PORT_3306_TCP_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO presets_series (series_title) VALUES ('${escaped_series_title}');"
-	mysql -h ${MYSQL_HOST:-${MYSQL_PORT_3306_TCP_ADDR}} -P ${MYSQL_PORT:-${MYSQL_PORT_3306_TCP_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO presets_titles (plex_name, series_title, season_number, episode_number, release_identifier) VALUES ('${escaped_plex_name}', '${escaped_series_title}', '${escaped_season_number}', '${escaped_episode_number}', ${escaped_release_identifier});"
-	mysql -h ${MYSQL_HOST:-${MYSQL_PORT_3306_TCP_ADDR}} -P ${MYSQL_PORT:-${MYSQL_PORT_3306_TCP_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO files (file_path, dir_path, base_name, plex_name, quality_title, crop, vbv_maxrate, file_duration) VALUES ('${escaped_file_path}', '${escaped_dir_path}', '${escaped_base_name}', '${escaped_plex_name}', '${escaped_quality_title}', ${crop}, ${vbv_maxrate}, ${file_duration});"
+	mysql -h ${MYSQL_PORT_3306_TCP_ADDR:-${MYSQL_HOST}} -P ${MYSQL_PORT_3306_TCP_PORT:-${MYSQL_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO presets_series (series_title) VALUES ('${escaped_series_title}');"
+	mysql -h ${MYSQL_PORT_3306_TCP_ADDR:-${MYSQL_HOST}} -P ${MYSQL_PORT_3306_TCP_PORT:-${MYSQL_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO presets_titles (plex_name, series_title, season_number, episode_number, release_identifier) VALUES ('${escaped_plex_name}', '${escaped_series_title}', '${escaped_season_number}', '${escaped_episode_number}', ${escaped_release_identifier});"
+	mysql -h ${MYSQL_PORT_3306_TCP_ADDR:-${MYSQL_HOST}} -P ${MYSQL_PORT_3306_TCP_PORT:-${MYSQL_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO files (file_path, dir_path, base_name, plex_name, quality_title, crop, vbv_maxrate, file_duration) VALUES ('${escaped_file_path}', '${escaped_dir_path}', '${escaped_base_name}', '${escaped_plex_name}', '${escaped_quality_title}', ${crop}, ${vbv_maxrate}, ${file_duration});"
 
 	cat /recipient.txt <(echo "Subject: Fitzflix Import") <(echo "${file_path}") | /usr/sbin/sendmail -t
 	
