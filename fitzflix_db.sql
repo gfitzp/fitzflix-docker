@@ -427,6 +427,7 @@ CREATE TABLE files (
 	decomb					INT,
 	nlmeans					VARCHAR(32),
 	nlmeans_tune			VARCHAR(32),
+	copy_as_is				ENUM('T', 'F') NOT NULL DEFAULT 'F',
 	date_settings_updated	DATETIME,
 	date_file_added			DATETIME NOT NULL,
 	date_file_archived		DATETIME,
@@ -663,7 +664,35 @@ SELECT
 			AND (		
 				file.date_file_deleted IS NULL
 				OR
-				CURRENT_TIMESTAMP BETWEEN file.date_restore_available AND DATE_ADD(file.date_restore_requested, INTERVAL 1 DAY) 
+				CURRENT_TIMESTAMP BETWEEN file.date_restore_available AND DATE_ADD(file.date_restore_requested, INTERVAL 1 DAY)
+			AND file.copy_as_is = 'T'
+		) THEN 'copy'
+		
+		
+		-- If we haven't yet transcoded the file, or if we've made changes to its encoding settings
+		-- since the last time we transcoded it, then encode the file with the current encoding settings
+		WHEN file.file_path = best.file_path
+			AND (
+				(file.date_file_added > title.latest_transcode)
+				OR
+				(file.date_settings_updated > title.latest_transcode)
+				OR
+				(title.date_settings_updated > title.latest_transcode)
+				OR
+				(title_generic.date_updated > title.latest_transcode)
+				OR
+				(series.date_series_updated > title.latest_transcode)
+				OR
+				(series_generic.date_updated > title.latest_transcode)
+				OR
+				(q.date_updated > title.latest_transcode)
+				OR title.latest_transcode IS NULL
+			)
+			AND (		
+				file.date_file_deleted IS NULL
+				OR
+				CURRENT_TIMESTAMP BETWEEN file.date_restore_available AND DATE_ADD(file.date_restore_requested, INTERVAL 1 DAY)
+			AND file.copy_as_is = 'F'
 		) THEN 'encode'
 		
 		
@@ -715,6 +744,7 @@ SELECT
 		ELSE NULL
 	END AS "nlmeans_tune",
 	COALESCE(title.audio_language, title_generic.audio_language, series.audio_language, series_generic.audio_language) AS "audio_language",
+	file.copy_as_is,
 	file.date_settings_updated,
 	file.date_file_added,
 	file.date_file_archived,

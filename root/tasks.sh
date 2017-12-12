@@ -86,6 +86,18 @@ restore_video () {
 }
 
 
+copy_video () {
+
+	rm /mnt/Storage/Plex/"${dir_path}/${plex_name}.*"
+	
+	cp /mnt/Storage/Originals/"${file_path}" /mnt/Storage/Plex/"${file_path}" &&
+	
+	# Update the database to show that the file has been copied as of now
+	mysql -h ${MYSQL_HOST:-${MYSQL_PORT_3306_TCP_ADDR}} -P ${MYSQL_PORT:-${MYSQL_PORT_3306_TCP_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO history_task (queue_start, file_path, task, dir_path, plex_name, series_title, release_identifier, file_duration, quality_title, task_duration) SELECT FROM_UNIXTIME('${queueStart}'), file_path, task, dir_path, plex_name, series_title, release_identifier, file_duration, quality_title, '${task_duration}' FROM v_queue WHERE file_path = '${escaped_file_path}';" &&
+	
+}
+
+
 encode_video () {
 
 	# If we don't have a local version of the file, download it from S3
@@ -259,6 +271,7 @@ decomb=${18}
 nlmeans=${19}
 nlmeans_tune=${20}
 audio_language=${21}
+copy_as_is=${22}
 
 
 # Create escaped versions of each value for if we need to use it in an SQL query
@@ -284,6 +297,7 @@ escaped_decomb=$(printf %q "${18}")
 escaped_nlmeans=$(printf %q "${19}")
 escaped_nlmeans_tune=$(printf %q "${20}")
 escaped_audio_language=$(printf %q "${21}")
+escaped_copy_as_is=$(printf %q "${22}")
 
 
 # Configure s3cmd by building .s3cfg file if it does not already exist
@@ -306,6 +320,11 @@ elif [[ "${task}" == "restore" ]]
 then
 
 	restore_video
+	
+elif [[ "${task}" == "copy" ]]
+then
+
+	copy_video
 	
 elif [[ "${task}" == "encode" ]] || [[ "${task}" == "calibration" ]]
 then
