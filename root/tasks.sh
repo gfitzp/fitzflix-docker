@@ -92,7 +92,7 @@ copy_video () {
 	
 	mkdir -p /mnt/storage/Plex"${dir_path}" &&
 	
-	cp /mnt/Storage/Originals/"${file_path}" /mnt/Storage/Plex/"${file_path}" &&
+	cp /mnt/Storage/Originals"${file_path}" /mnt/Storage/Plex"${file_path}" &&
 	
 	# Update the database to show that the file has been copied as of now
 	mysql -h ${MYSQL_PORT_3306_TCP_ADDR:-${MYSQL_HOST}} -P ${MYSQL_PORT_3306_TCP_PORT:-${MYSQL_PORT:=3306}} -u ${MYSQL_USER} -p${MYSQL_PASSWORD} ${MYSQL_DB:="fitzflix_db"} -e "INSERT INTO history_task (queue_start, file_path, task, dir_path, plex_name, series_title, release_identifier, file_duration, quality_title, task_duration) SELECT FROM_UNIXTIME('${queueStart}'), file_path, task, dir_path, plex_name, series_title, release_identifier, file_duration, quality_title, '${task_duration}' FROM v_queue WHERE file_path = '${escaped_file_path}';" &&
