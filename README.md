@@ -1,4 +1,6 @@
-# Fitzflix
+**Currently unmaintained, check out [fitzflix](https://github.com/gfitzp/fitzflix) in the meantime...**
+
+# fitzflix-docker
 
 A Docker-based video library manager, one of original-quality files and another of transcoded versions for [Plex](https://www.plex.tv/).
 
